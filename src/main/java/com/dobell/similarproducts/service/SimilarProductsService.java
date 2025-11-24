@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 /**
- *
+ * Servicio encargado de llamar a la API externa para obtener los datos necesarios de productos relacionados
  * @author dobell
  */
 @Service
@@ -22,6 +22,7 @@ public class SimilarProductsService {
 
     private final RestTemplate restTemplate;
     
+    // url de pa API de consulta
     @Value("${existing.api.base.url:http://localhost:3001}")
     private String existingApiBaseUrl;
 
@@ -30,6 +31,11 @@ public class SimilarProductsService {
         this.restTemplate = restTemplate;
     }
 
+    /**
+     * Obtiene de la API los productos similares al del id indicado
+     * @param productId id de producto actual
+     * @return lista de productos similares
+     */
     public List<ProductDetail> getSimilarProducts(String productId) {
         // Get similar product IDs
         String[] similarIds = getSimilarProductIds(productId);
@@ -38,7 +44,7 @@ public class SimilarProductsService {
             return List.of();
         }
 
-        // Get product details for each similar ID in parallel
+        // Obtención en paralelo de los datos de varios productos
         List<CompletableFuture<ProductDetail>> futures = Arrays.stream(similarIds)
                 .map(id -> CompletableFuture.supplyAsync(() -> getProductDetail(id)))
                 .collect(Collectors.toList());
@@ -58,6 +64,11 @@ public class SimilarProductsService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtención de ids de productos similares
+     * @param productId producto actual
+     * @return listado de id de productos similares
+     */
     private String[] getSimilarProductIds(String productId) {
         String url = UriComponentsBuilder.fromHttpUrl(existingApiBaseUrl)
                 .path("/product/{productId}/similarids")
@@ -72,6 +83,11 @@ public class SimilarProductsService {
         }
     }
 
+    /**
+     * Obtención de detalles de un producto por id
+     * @param productId producto a consultar
+     * @return detalles del producto
+     */
     private ProductDetail getProductDetail(String productId) {
         String url = UriComponentsBuilder.fromHttpUrl(existingApiBaseUrl)
                 .path("/product/{productId}")

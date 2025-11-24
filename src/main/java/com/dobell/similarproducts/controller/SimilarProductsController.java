@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- *
+ * Controlador para llamadas rest
  * @author dobell
  */
 @RestController

@@ -7,7 +7,7 @@ package com.dobell.similarproducts.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- *
+ * Bean entidad para los datos de producto
  * @author dobell
  */
 public class ProductDetail {

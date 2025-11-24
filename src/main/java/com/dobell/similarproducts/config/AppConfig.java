@@ -11,17 +11,23 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 /**
- *
+ * Lector de configuración
  * @author dobell
  */
 @Configuration
 public class AppConfig {
 
+    private static final long TIMEOUT = 5; 
+    /**
+     * Configuración de timeouts para obtención de coenxión y lectura de resultado
+     * @param builder builder
+     * @return plantilla rest configurada
+     */
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder
-                .setConnectTimeout(Duration.ofSeconds(5))
-                .setReadTimeout(Duration.ofSeconds(5))
+                .setConnectTimeout(Duration.ofSeconds(TIMEOUT))
+                .setReadTimeout(Duration.ofSeconds(TIMEOUT))
                 .build();
     }
 }
