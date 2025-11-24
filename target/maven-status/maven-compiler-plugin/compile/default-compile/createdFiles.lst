@@ -1,0 +1,5 @@
+com/dobell/similarproducts/config/AppConfig.class
+com/dobell/similarproducts/controller/SimilarProductsController.class
+com/dobell/similarproducts/model/ProductDetail.class
+com/dobell/similarproducts/SimilarProductsApp.class
+com/dobell/similarproducts/service/SimilarProductsService.class
