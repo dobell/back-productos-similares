@@ -1,4 +1,4 @@
-# Proyectobackend - Productos Similares
+# Proyecto backend - Productos Similares
 
 Este proyecto es un pequeño backend para crear una API intermedia para obtener productos similares a uno dado su id
 
