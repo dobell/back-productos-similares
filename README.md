@@ -6,7 +6,7 @@ El proyecto consultará un endpoint disponible en el pueto 3001 (proyecto "simul
 
 Devolverá el json de productos similares.
 
-# Key Features and Considerations
+## Características y Consideraciones
 
 1. Código optimizado:
 - Procesamiento paralelo con CompletableFuture para obtener los detalles de producto de forma concurrente.
