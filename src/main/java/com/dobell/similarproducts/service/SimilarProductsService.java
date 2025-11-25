@@ -1,18 +1,20 @@
 package com.dobell.similarproducts.service;
 
 import com.dobell.similarproducts.model.ProductDetail;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
 /**
  * Servicio encargado de llamar a la API externa para obtener los datos necesarios de productos relacionados
  * @author dobell
@@ -20,8 +22,12 @@ import java.util.stream.Collectors;
 @Service
 public class SimilarProductsService {
 
+    private static final Logger logger = LoggerFactory.getLogger(
+        SimilarProductsService.class
+    );
+
     private final RestTemplate restTemplate;
-    
+
     // url de pa API de consulta
     @Value("${existing.api.base.url:http://localhost:3001}")
     private String existingApiBaseUrl;
@@ -37,31 +43,60 @@ public class SimilarProductsService {
      * @return lista de productos similares
      */
     public List<ProductDetail> getSimilarProducts(String productId) {
-        // Get similar product IDs
-        String[] similarIds = getSimilarProductIds(productId);
-        
-        if (similarIds == null || similarIds.length == 0) {
+        if (productId == null || productId.trim().isEmpty()) {
+            logger.warn("ID de producto inválido recibido: {}", productId);
             return List.of();
         }
 
+        logger.info(
+            "Obteniendo productos similares para el producto ID: {}",
+            productId
+        );
+
+        // Get similar product IDs
+        String[] similarIds = getSimilarProductIds(productId);
+
+        if (similarIds == null || similarIds.length == 0) {
+            logger.info(
+                "No se encontraron productos similares para el producto ID: {}",
+                productId
+            );
+            return List.of();
+        }
+
+        logger.debug(
+            "Se encontraron {} productos similares para el producto ID: {}",
+            similarIds.length,
+            productId
+        );
+
         // Obtención en paralelo de los datos de varios productos
-        List<CompletableFuture<ProductDetail>> futures = Arrays.stream(similarIds)
-                .map(id -> CompletableFuture.supplyAsync(() -> getProductDetail(id)))
-                .collect(Collectors.toList());
+        List<CompletableFuture<ProductDetail>> futures = Arrays.stream(
+            similarIds
+        )
+            .map(id ->
+                CompletableFuture.supplyAsync(() -> getProductDetail(id))
+            )
+            .collect(Collectors.toList());
 
         // Wait for all futures to complete and collect results
-        return futures.stream()
-                .map(future -> {
-                    try {
-                        return future.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        // Log error and return null for failed requests
-                        System.err.println("Error getting product detail: " + e.getMessage());
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return futures
+            .stream()
+            .map(future -> {
+                try {
+                    return future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    logger.error(
+                        "Error al obtener detalles del producto similar: {}",
+                        e.getMessage(),
+                        e
+                    );
+                    Thread.currentThread().interrupt();
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -70,15 +105,29 @@ public class SimilarProductsService {
      * @return listado de id de productos similares
      */
     private String[] getSimilarProductIds(String productId) {
+        logger.debug(
+            "Obteniendo IDs de productos similares para el producto ID: {}",
+            productId
+        );
         String url = UriComponentsBuilder.fromHttpUrl(existingApiBaseUrl)
-                .path("/product/{productId}/similarids")
-                .buildAndExpand(productId)
-                .toUriString();
+            .path("/product/{productId}/similarids")
+            .buildAndExpand(productId)
+            .toUriString();
 
         try {
-            return restTemplate.getForObject(url, String[].class);
+            String[] result = restTemplate.getForObject(url, String[].class);
+            logger.debug(
+                "Se obtuvieron {} IDs de productos similares",
+                result != null ? result.length : 0
+            );
+            return result;
         } catch (Exception e) {
-            System.err.println("Error getting similar product IDs: " + e.getMessage());
+            logger.error(
+                "Error al obtener IDs de productos similares para el producto ID {}: {}",
+                productId,
+                e.getMessage(),
+                e
+            );
             return new String[0];
         }
     }
@@ -89,15 +138,36 @@ public class SimilarProductsService {
      * @return detalles del producto
      */
     private ProductDetail getProductDetail(String productId) {
+        logger.debug("Obteniendo detalles del producto ID: {}", productId);
         String url = UriComponentsBuilder.fromHttpUrl(existingApiBaseUrl)
-                .path("/product/{productId}")
-                .buildAndExpand(productId)
-                .toUriString();
+            .path("/product/{productId}")
+            .buildAndExpand(productId)
+            .toUriString();
 
         try {
-            return restTemplate.getForObject(url, ProductDetail.class);
+            ProductDetail result = restTemplate.getForObject(
+                url,
+                ProductDetail.class
+            );
+            if (result != null) {
+                logger.debug(
+                    "Se obtuvieron detalles del producto ID: {}",
+                    productId
+                );
+            } else {
+                logger.warn(
+                    "No se encontraron detalles para el producto ID: {}",
+                    productId
+                );
+            }
+            return result;
         } catch (Exception e) {
-            System.err.println("Error getting product detail for ID " + productId + ": " + e.getMessage());
+            logger.error(
+                "Error al obtener detalles del producto ID {}: {}",
+                productId,
+                e.getMessage(),
+                e
+            );
             return null;
         }
     }
