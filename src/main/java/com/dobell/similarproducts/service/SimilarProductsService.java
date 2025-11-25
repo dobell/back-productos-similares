@@ -137,7 +137,7 @@ public class SimilarProductsService {
      * @param productId producto a consultar
      * @return detalles del producto
      */
-    private ProductDetail getProductDetail(String productId) {
+    public ProductDetail getProductDetail(String productId) {
         logger.debug("Obteniendo detalles del producto ID: {}", productId);
         String url = UriComponentsBuilder.fromHttpUrl(existingApiBaseUrl)
             .path("/product/{productId}")
