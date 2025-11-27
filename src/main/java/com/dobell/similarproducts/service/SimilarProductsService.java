@@ -28,7 +28,7 @@ public class SimilarProductsService {
 
     private final RestTemplate restTemplate;
 
-    // url de pa API de consulta
+    // url de la API de consulta
     @Value("${existing.api.base.url:http://localhost:3001}")
     private String existingApiBaseUrl;
 
